@@ -11,6 +11,10 @@ from database.models import User
 
 app = Flask(__name__)
 
+os.environ["MONGO_KEY"] = "<paste_your_connection_string_here>"
+
+os.environ["JWT_SECRET"] = "<paste_your_jwt_secret_here>"
+
 # Connect to MongoDB
 app.config["MONGODB_HOST"] = os.environ.get("MONGO_KEY")
 
