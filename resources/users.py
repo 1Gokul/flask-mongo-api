@@ -9,14 +9,21 @@ from uuid import uuid4
 from database.models import Item, User
 
 SALTS = 10
-VALIDITY = 360
+VALIDITY = 30
 
 
 class UserApi(Resource):
-    @jwt_required()
     def get(self):
         users = User.objects.only("id", "username").to_json()
-        return Response(users, status=200)
+        return Response(users, status=200, mimetype="application/json")
+
+    @jwt_required()
+    def delete(self):
+        user_id = get_jwt_identity()
+        User.objects.get(id=user_id).delete()
+
+        return Response(status=204, mimetype="application/json")
+        
 
 
 class RegisterApi(Resource):
