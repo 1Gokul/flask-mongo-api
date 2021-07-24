@@ -14,6 +14,7 @@ app = Flask(__name__)
 # Connect to MongoDB
 app.config["MONGODB_HOST"] = os.environ.get("MONGO_KEY")
 
+# JWT Secret
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET")
 
 api = Api(app)
@@ -23,4 +24,4 @@ jwt = JWTManager(app)
 
 init_routes(api)
 
-app.run(debug=True)
+app.run()

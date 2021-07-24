@@ -12,20 +12,7 @@ SALTS = 10
 VALIDITY = 30
 
 
-class UserApi(Resource):
-    def get(self):
-        users = User.objects.only("id", "username").to_json()
-        return Response(users, status=200, mimetype="application/json")
-
-    @jwt_required()
-    def delete(self):
-        user_id = get_jwt_identity()
-        User.objects.get(id=user_id).delete()
-
-        return Response(status=204, mimetype="application/json")
-        
-
-
+# Registering new Users
 class RegisterApi(Resource):
     def post(self):
         request_body = request.json
@@ -43,7 +30,22 @@ class RegisterApi(Resource):
 
         return Response(json.dumps(response), status=200, mimetype="application/json")
 
+# Viewing and deleting Users
+class UserApi(Resource):
+    def get(self):
+        """Get all registered users."""
+        users = User.objects.only("id", "username").to_json()
+        return Response(users, status=200, mimetype="application/json")
 
+    @jwt_required()
+    def delete(self):
+        """Delete the user currently logged in."""
+        user_id = get_jwt_identity()
+        User.objects.get(id=user_id).delete()
+
+        return Response(status=204, mimetype="application/json")
+
+# User Login
 class LoginApi(Resource):
     def post(self):
         request_body = request.json
@@ -74,7 +76,7 @@ class LoginApi(Resource):
             json.dumps(response), status=status, mimetype="application/json"
         )
 
-
+# Add or remove things from the cart
 class CartApi(Resource):
     @jwt_required()
     def get(self):
@@ -104,7 +106,7 @@ class CartApi(Resource):
             ].name
         except IndexError:  # if the item does not exist, add the new item.
             item = Item(
-                id=str(uuid4()), name=request_body.get("name"), quantity=item_quantity
+                item_id=str(uuid4()), name=request_body.get("name"), quantity=item_quantity
             )
             logged_in_user.cart.append(item)
         else:  # If it exists, increase the quantity by the number specified.
@@ -121,10 +123,7 @@ class CartApi(Resource):
 
         return Response(json.dumps(response), status=200, mimetype="application/json")
 
-    # Add post, put and delete
-    # comment code
-
-
+# Get single Items from the cart and modify or delete them
 class ItemApi(Resource):
     @jwt_required()
     def get(self, id):
@@ -133,7 +132,7 @@ class ItemApi(Resource):
         loggedInUser = User.objects.only("username", "cart").get(id=user_id)
 
         try:  # check if the item exists
-            item = loggedInUser.cart.filter(id=id)[0]
+            item = loggedInUser.cart.filter(item_id=id)[0]
         except IndexError:  # if it doesn't, return.
             response = {"error": "An item with that ID does not exist."}
             status = 404
@@ -159,7 +158,7 @@ class ItemApi(Resource):
             loggedInUser = User.objects.get(id=user_id)
 
             try:  # check if the item exists
-                item = loggedInUser.cart.filter(id=id)[0]
+                item = loggedInUser.cart.filter(item_id=id)[0]
             except IndexError:  # if it doesn't, return.
                 response = {"error": "An item with that ID does not exist."}
                 status = 404
@@ -178,6 +177,6 @@ class ItemApi(Resource):
     def delete(self, id):
         user_id = get_jwt_identity()
 
-        User.objects(id=user_id).update_one(pull__cart__id=id)
+        User.objects(id=user_id).update_one(pull__cart__item_id=id)
 
         return Response(status=204, mimetype="application/json")

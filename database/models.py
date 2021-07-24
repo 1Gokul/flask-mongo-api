@@ -3,8 +3,8 @@ from .db import db
 
 
 class Item(db.EmbeddedDocument):
-    id = db.StringField(required=True, unique=True)
-    name = db.StringField(required=True, unique=True)
+    item_id = db.StringField(required=True)
+    name = db.StringField(required=True)
     quantity = db.IntField(required=True)
 
 
