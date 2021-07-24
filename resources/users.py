@@ -166,3 +166,11 @@ class ItemApi(Resource):
         return Response(
             json.dumps(response), status=status, mimetype="application/json"
         )
+
+    @jwt_required()
+    def delete(self, id):
+        user_id = get_jwt_identity()
+
+        User.objects(id=user_id).update_one(pull__cart__id=id)
+
+        return Response(status=204, mimetype="application/json")
