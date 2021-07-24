@@ -44,7 +44,7 @@ class LoginApi(Resource):
             user = User.objects.get(username=request_body.get("username"))
         except Exception:
             response = {"error": "Wrong username or password."}
-            status=400
+            status = 400
 
         else:
             passwordMatch = flask_bcrypt.check_password_hash(
@@ -123,8 +123,6 @@ class ItemApi(Resource):
     def get(self, id):
         user_id = get_jwt_identity()
 
-        request_body = request.json
-
         loggedInUser = User.objects.only("username", "cart").get(id=user_id)
 
         try:  # check if the item exists
@@ -135,6 +133,35 @@ class ItemApi(Resource):
         else:  # else, return the item.
             response = {"username": loggedInUser.username, "item": item.to_mongo()}
             status = 200
+
+        return Response(
+            json.dumps(response), status=status, mimetype="application/json"
+        )
+
+    @jwt_required()
+    def put(self, id):
+        user_id = get_jwt_identity()
+
+        request_body = request.json
+
+        if request_body is None:
+            response = {"error": "Quantity not specified."}
+            status = 400
+
+        else:
+            loggedInUser = User.objects.get(id=user_id)
+
+            try:  # check if the item exists
+                item = loggedInUser.cart.filter(id=id)[0]
+            except IndexError:  # if it doesn't, return.
+                response = {"error": "An item with that ID does not exist."}
+                status = 404
+            else:  # else, return the item.
+                item.quantity = request_body.get("quantity")
+                loggedInUser.save()
+
+                response = {"username": loggedInUser.username, "item": item.to_mongo()}
+                status = 200
 
         return Response(
             json.dumps(response), status=status, mimetype="application/json"
